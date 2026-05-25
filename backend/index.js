@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import authRoutes from "./routes/auth.routes.js";
 
 dotenv.config();
 
@@ -23,6 +24,9 @@ app.use(cors({
 
 // middleware to handle JSON object in request body 
 app.use(express.json());
+
+
+app.use("/api/auth", authRoutes);
 
 
 app.listen(5000, () => {
