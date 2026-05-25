@@ -7,12 +7,12 @@ export const signup = async (req, res) => {
     try {
 
         if (!name || !email || !password || name === "" || email === "" || password === "") {
-            return res.status(400).json({ success: false, message: "All fields are required" });
+            return next(errorHandler(400, "All fields are required"));
         }
 
         const isAlreadyExist = await User.findOne({ email });
         if (isAlreadyExist) {
-            return res.status(400).json({ success: false, message: "User already exists" });
+            return next(errorHandler(400, "User already exists"));
         }
 
         let role = "user";
@@ -31,7 +31,7 @@ export const signup = async (req, res) => {
         });
 
         await newUser.save();
-        return res.status(201).json({ success: true, message: "User created successfully" });
+        return next(errorHandler(201, "User registered successfully"));
     }
 
     catch (error) {
