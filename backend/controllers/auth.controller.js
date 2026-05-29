@@ -72,3 +72,45 @@ export const signIn = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 }
+
+export const getUserProfile = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.userId).select("-password");
+
+        if(!user) {
+            return next(errorHandler(404, "User not found"));
+        }
+        return res.status(200).json({ success: true, user });
+    }
+    catch (error) {
+        console.error("Error in getUserProfile controller", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+
+export const updateUserProfile = async (req, res, next) => {
+    try {
+        const { name, profileImageUrl, email, password } = req.body;
+        const updatedData = {};
+
+        if(name) updatedData.name = name;
+        if(profileImageUrl) updatedData.profileImageUrl = profileImageUrl;
+        if(email) updatedData.email = email;
+        if(password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updatedData.password = hashedPassword;
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(req.userId, updatedData, { new: true }).select("-password");
+
+        if(!updatedUser) {
+            return next(errorHandler(404, "User not found"));
+        }
+
+        return res.status(200).json({ success: true, message: "User profile updated successfully", user: updatedUser });
+    }
+    catch(err) {
+        console.error("Error in updateUserProfile controller", err);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
