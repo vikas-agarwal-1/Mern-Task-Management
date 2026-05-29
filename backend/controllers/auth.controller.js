@@ -90,11 +90,11 @@ export const getUserProfile = async (req, res, next) => {
 
 export const updateUserProfile = async (req, res, next) => {
     try {
-        const { name, profileImageUrl, email, password } = req.body;
+        const { name, email, password } = req.body;
         const updatedData = {};
 
         if(name) updatedData.name = name;
-        if(profileImageUrl) updatedData.profileImageUrl = profileImageUrl;
+        // if(profileImageUrl) updatedData.profileImageUrl = profileImageUrl;
         if(email) updatedData.email = email;
         if(password) {
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -111,6 +111,22 @@ export const updateUserProfile = async (req, res, next) => {
     }
     catch(err) {
         console.error("Error in updateUserProfile controller", err);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+
+export const uploadImage = async (req, res, next)=> {
+    try {
+        
+        if(!req.file) {
+            return next(errorHandler(400, "No file uploaded"))
+        }
+
+        const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+        res.status(200).json({ success: true, message: "Image uploaded successfully", imageUrl });
+    }
+    catch(err) {
+        console.error("Error in uploadImage controller", err);
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 }
