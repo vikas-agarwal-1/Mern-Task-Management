@@ -1,5 +1,7 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
+import {errorHandler} from "../utils/error.js";
+import jwt from "jsonwebtoken";
 
 export const signup = async (req, res) => {
     const { name, email, password, profileImageUrl, adminJoinCode } = req.body;
@@ -36,6 +38,37 @@ export const signup = async (req, res) => {
 
     catch (error) {
         console.error("Error in signup controller", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+
+export const signIn = async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        if(!email || !password || email === "" || password === "") {
+            return next(errorHandler(400, "All fields are required"));
+        }
+
+        const validUser = await User.findOne({email});
+        if(!validUser) {
+            return next(errorHandler(404, "User not found"));
+        }
+
+        const isPasswordValid = await  bcrypt.compare(password, validUser.password);
+        if(!isPasswordValid) {
+            return next(errorHandler(401, "Invalid credentials"));
+        }
+
+        const token = jwt.sign({ userId: validUser._id, role: validUser.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+        const { password: pass, ...rest } = validUser._doc;
+
+        return res.status(200).cookie("access_token", token, {httpOnly: true}).json({ success: true, message: "User signed in successfully", user: rest });
+
+    }
+    catch (error) {
+        console.error("Error in sign-in controller", error);
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 }
